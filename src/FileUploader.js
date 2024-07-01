@@ -2,7 +2,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faUpload, faCheckCircle} from '@fortawesome/free-solid-svg-icons';
 import './FileUploader.css';
 
 function FileUploader() {
@@ -24,7 +24,6 @@ function FileUploader() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Verificación para asegurarse de que ambos archivos están seleccionados
         if (!sfFile || !odFile) {
             console.error('Both files must be selected before submitting.');
             return;
@@ -35,7 +34,6 @@ function FileUploader() {
         formData.append('odFile', odFile);
 
         console.log('Submitting files:', sfFile, odFile);
-
     };
 
     return (
@@ -46,10 +44,16 @@ function FileUploader() {
                     <div {...getRootPropsSf()} className='dropzone'>
                         <input {...getInputPropsSf()} />
                         <div className='inner'>
-                            <FontAwesomeIcon icon={faUpload} size="3x" />
-                            <p className='text'>
-                                {isDragActiveSf ? 'Drop the files here ...' : 'Upload file'}
-                            </p>
+                            {!sfFile && (
+                                <>
+                                    <FontAwesomeIcon icon={faUpload} className='upload-icon'/>
+                                    <p className='text'>
+                                        {isDragActiveSf ? 'Drop the files here ...' : 'Upload file'}
+                                    </p>
+                                </>
+                            )}
+                            {sfFile && <p className='file-name'>{sfFile.name}</p>}
+                            {sfFile && <FontAwesomeIcon icon={faCheckCircle} size='sm' className='check-icon' />}
                         </div>
                     </div>
                 </div>
@@ -59,10 +63,16 @@ function FileUploader() {
                     <div {...getRootPropsOd()} className='dropzone'>
                         <input {...getInputPropsOd()} />
                         <div className='inner'>
-                            <FontAwesomeIcon icon={faUpload} size="3x" />
-                            <p className='text'>
-                                {isDragActiveOd ? 'Drop the files here ...' : 'Upload file'}
-                            </p>
+                            {!odFile && (
+                                <>
+                                    <FontAwesomeIcon icon={faUpload} className='upload-icon'/>
+                                    <p className='text'>
+                                        {isDragActiveSf ? 'Drop the files here ...' : 'Upload file'}
+                                    </p>
+                                </>
+                            )}
+                            {odFile && <p className='file-name'>{odFile.name}</p>}
+                            {odFile && <FontAwesomeIcon icon={faCheckCircle} size='sm' className='check-icon' />}
                         </div>
                     </div>
                 </div>
