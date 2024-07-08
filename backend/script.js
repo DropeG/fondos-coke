@@ -3,6 +3,7 @@ const prompt = require('prompt-sync')();
 
 // Función para leer las posiciones
 function leerPosiciones(path_sf) {
+    console.log(`Reading positions from: ${path_sf}`);
     const workbook = xlsx.readFile(path_sf);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
@@ -23,6 +24,7 @@ function leerPosiciones(path_sf) {
 
 // Función para calcular operaciones diarias
 function calcularOperacionesDiarias(path_od) {
+    console.log(`Calculating daily operations from: ${path_od}`);
     const workbook = xlsx.readFile(path_od);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
@@ -57,7 +59,7 @@ function calcularOperacionesDiarias(path_od) {
 }
 
 // Función para actualizar posiciones
-function actualizarPosiciones(serviciosFinancieros, operacionesDiarias) {
+function actualizarPosiciones(serviciosFinancieros, operacionesDiarias, userInput) {
     const resultado = { ...serviciosFinancieros };
     const corta = {};
     const simultanea = {};
@@ -67,7 +69,7 @@ function actualizarPosiciones(serviciosFinancieros, operacionesDiarias) {
         if (resultado[key] !== undefined) {
             resultado[key] += value;
         } else {
-            const tipo = prompt(`${key} es simultanea, corta o garantia? `);
+            const tipo = userInput[key];
             if (tipo === 'simultanea') {
                 simultanea[key] = (simultanea[key] || 0) + value;
             } else if (tipo === 'corta') {
@@ -83,6 +85,7 @@ function actualizarPosiciones(serviciosFinancieros, operacionesDiarias) {
 
 // Función para comprobar las fechas
 function comprobarFechas(path_sf, path_od) {
+    console.log(`Checking dates between: ${path_sf} and ${path_od}`);
     const workbookSF = xlsx.readFile(path_sf);
     const sheetSF = workbookSF.Sheets[workbookSF.SheetNames[0]];
     const dataSF = xlsx.utils.sheet_to_json(sheetSF, { header: 1 });
@@ -100,35 +103,29 @@ function comprobarFechas(path_sf, path_od) {
 }
 
 // Función principal
-function main(path_sf, path_od) {
+function main(path_sf, path_od, userInput) {
     if (comprobarFechas(path_sf, path_od)) {
         console.log('No corresponden las fechas de los archivos subidos');
-        return;
+        return JSON.stringify({ error: 'No corresponden las fechas de los archivos subidos' });
     }
 
     const serviciosFinancieros = leerPosiciones(path_sf);
-    console.log('POSICIONES SERVICIOS FINANCIEROS:');
-    console.log(serviciosFinancieros);
-    console.log('\n');
 
     const operacionesDiarias = calcularOperacionesDiarias(path_od);
-    console.log('NETO OPERACIONES DIARIAS:');
-    console.log(operacionesDiarias);
-    console.log('\n');
 
-    const { resultado, corta, simultanea, garantia } = actualizarPosiciones(serviciosFinancieros, operacionesDiarias);
-    console.log('Resultado: ');
-    console.log(resultado);
-    console.log('\n');
-    console.log('Corta:', corta);
-    console.log('Simultanea:', simultanea);
-    console.log('Garantia:', garantia);
-    console.log('\n');
+    const inputsPreguntas = Object.keys(operacionesDiarias).filter(key => !serviciosFinancieros[key] && !userInput[key]);
+
+    if (inputsPreguntas.length > 0) {
+        return JSON.stringify({ prompts: inputsPreguntas });
+    }
+
+    const { resultado, corta, simultanea, garantia } = actualizarPosiciones(serviciosFinancieros, operacionesDiarias, userInput);
+    return JSON.stringify({
+        resultado,
+        corta, 
+        simultanea, 
+        garantia
+    });
 }
 
-// Paths to the Excel files
-const path_sf = "./Excels/SERVICIOS FINANCIEROS 04:06.xlsx";
-const path_od = "./Excels/OPERACIONES DIARIAS 03:06.xls";
-
-// Execute main function
-main(path_sf, path_od);
+module.exports = main;

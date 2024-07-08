@@ -6,7 +6,9 @@ import FileUploader from './FileUploader';
 const App = () => {
   return (
     <div>
-      <h1 className='titulo'>ARCHIVOS EXCEL</h1>
+      <div className='title-container'>
+        <h1 className='titulo'>ARCHIVOS EXCEL</h1>
+      </div>
       <FileUploader/>
 
     </div>
