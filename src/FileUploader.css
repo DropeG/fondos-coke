@@ -16,8 +16,8 @@
 
 /* Dropzone styling */
 .dropzone {
-    width: 300px;
-    height: 150px;
+    width: 200px;
+    height: 75px;
     border-width: 2px;
     border-radius: 8px;
     border-color: #ccc;
@@ -155,8 +155,8 @@
 }
 
 .prompt-title {
-    margin-bottom: 40px;
-    margin-top: 40px;
+    margin-bottom: 30px;
+    margin-top: 15px;
 }
 
 /* Prompt label style */ 
