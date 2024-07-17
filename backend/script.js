@@ -1,5 +1,5 @@
 const xlsx = require('xlsx');
-const prompt = require('prompt-sync')();
+const prompt = require('prompt-sync');
 
 // Función para leer las posiciones
 function leerPosiciones(path_sf) {

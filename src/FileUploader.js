@@ -7,7 +7,7 @@ import './FileUploader.css';
 function FileUploader() {
     const [sfFile, setSfFile] = useState(null);
     const [odFile, setOdFile] = useState(null);
-    const [uploadResult, setUploadResult] = useState(null);
+    const [tableData, setTableData] = useState(null);
     const [prompts, setPrompts] = useState([]);
     const [userInput, setUserInput] = useState({});
 
@@ -44,7 +44,7 @@ function FileUploader() {
                 if (result.prompts) {
                     setPrompts(result.prompts);
                 } else {
-                    setUploadResult(JSON.stringify(result, null, 2));
+                    setTableData(result);
                 }
             } else {
                 const errorText = await response.text();
@@ -74,7 +74,7 @@ function FileUploader() {
 
             if (response.ok) {
                 const result = await response.json();
-                setUploadResult(JSON.stringify(result, null, 2));
+                setTableData(result);
             } else {
                 const errorText = await response.text();
                 console.error("Error uploading files:", errorText);
@@ -88,6 +88,67 @@ function FileUploader() {
     const handleUserInputChange = async (e) => {
         const { name, value } = e.target;
         setUserInput({ ...userInput, [name]: value });
+    };
+
+    const renderResultadosTable = (data) => {
+        const rows = [];
+        for (const [key, value] of Object.entries(data)) {
+            for (const [subKey, subValue] of Object.entries(value)) {
+                rows.push(
+                    <tr key={subKey}>
+                        <td>{subKey}</td>
+                        <td>{subValue}</td>
+                    </tr>
+                );
+            }
+        }
+
+        return (
+            <div className='table-container'>
+                <h2 className='table-heading'>Resultados</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>INSTRUMENTO</th>
+                            <th>POSICION</th>
+                        </tr>
+                    </thead>
+                    <tbody>{rows}</tbody>
+                </table>
+            </div>
+        );
+    }
+
+    const renderOtherTable = (data) => {
+        const rows = [];
+        const categories = ['corta', 'simultanea', 'garantia'];
+        categories.forEach(category => {
+            for (const [key, value] of Object.entries(data[category])) {
+                rows.push(
+                    <tr key={key}>
+                        <td>{key}</td>
+                        <td>{value}</td>
+                        <td>{category}</td>
+                    </tr>
+                );
+            }
+        });
+
+        return (
+            <div className='table-container'>
+                <h2 className='table-heading'>Otras Categorías</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Position</th>
+                            <th>Tipo de Venta</th>
+                        </tr>
+                    </thead>
+                    <tbody>{rows}</tbody>
+                </table>
+            </div>
+        );
     };
     return (
         <div>
@@ -144,7 +205,12 @@ function FileUploader() {
                     <button className='submit' style={{marginTop: '20px'}} type="submit">Submit</button>
                 </form>
             )}
-            {uploadResult && <div className="upload-result"><pre>{uploadResult}</pre></div>}
+            {tableData && (
+                <div>
+                    {renderResultadosTable(tableData)}
+                    {renderOtherTable(tableData)}
+                </div>
+            )}
         </div>
     );
 }

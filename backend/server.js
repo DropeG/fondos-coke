@@ -17,15 +17,6 @@ app.use(express.json());
 
 const storage = multer.memoryStorage();
 
-//const storage = multer.diskStorage({
-//    destination: function(req, file, cb) {
-//        cb(null, 'uploads/');
-//    }, 
-//    filename: function (req, file, cb) {
-//        cb(null, `${Date.now()}-${file.originalname}`);
-//    }
-//});
-
 const upload = multer({storage: storage});
 
 app.post('/upload', upload.fields([{ name: 'sfFile' }, { name: 'odFile' }]), async (req, res) => {

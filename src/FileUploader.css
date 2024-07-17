@@ -175,5 +175,38 @@
     margin-bottom: 50px;
 }
 
+.table-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
 
+table {
+    width: 20%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+td{
+    background-color: #fff;
+}
+
+.table-heading {
+    font-size: 18px;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    margin-bottom: 10px;
+}
 
