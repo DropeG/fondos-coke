@@ -1,15 +1,17 @@
 const xlsx = require('xlsx');
-const prompt = require('prompt-sync')();
+
 
 // Función para leer las posiciones
 function leerPosiciones(path_sf) {
-    console.log(`Reading positions from: ${path_sf}`);
     const workbook = xlsx.readFile(path_sf);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
     const headers = data[0];
     const CODIGO_INSTRUMENTO_INDEX = headers.indexOf('CODIGO INSTRUMENTO');
     const POSICION_DISPONIBLE_INDEX = headers.indexOf('POSICION DISPONIBLE');
+    const FECHA = headers.indexOf('FECHA');
+
+    const fecha = data[1][FECHA];
 
     const posiciones = {};
     for (let i = 1; i < data.length; i++) {
@@ -18,13 +20,12 @@ function leerPosiciones(path_sf) {
         const posicionDisponible = row[POSICION_DISPONIBLE_INDEX];
         posiciones[codigoInstrumento] = posicionDisponible;
     }
-
-    return posiciones;
+    return {posiciones, fecha};
 }
 
 // Función para calcular operaciones diarias
 function calcularOperacionesDiarias(path_od) {
-    console.log(`Calculating daily operations from: ${path_od}`);
+    //console.log(`Calculating daily operations from: ${path_od}`);
     const workbook = xlsx.readFile(path_od);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
@@ -60,7 +61,7 @@ function calcularOperacionesDiarias(path_od) {
 
 // Función para actualizar posiciones
 function actualizarPosiciones(serviciosFinancieros, operacionesDiarias, userInput) {
-    const resultado = { ...serviciosFinancieros };
+    const resultado = { ...serviciosFinancieros};
     const corta = {};
     const simultanea = {};
     const garantia = {};
@@ -85,7 +86,7 @@ function actualizarPosiciones(serviciosFinancieros, operacionesDiarias, userInpu
 
 // Función para comprobar las fechas
 function comprobarFechas(path_sf, path_od) {
-    console.log(`Checking dates between: ${path_sf} and ${path_od}`);
+    //console.log(`Checking dates between: ${path_sf} and ${path_od}`);
     const workbookSF = xlsx.readFile(path_sf);
     const sheetSF = workbookSF.Sheets[workbookSF.SheetNames[0]];
     const dataSF = xlsx.utils.sheet_to_json(sheetSF, { header: 1 });
@@ -109,22 +110,47 @@ function main(path_sf, path_od, userInput) {
         return JSON.stringify({ error: 'No corresponden las fechas de los archivos subidos' });
     }
 
-    const serviciosFinancieros = leerPosiciones(path_sf);
+    const resultadoLP= leerPosiciones(path_sf);
+
+    const serviciosFinancieros = resultadoLP.posiciones;
 
     const operacionesDiarias = calcularOperacionesDiarias(path_od);
 
-    const inputsPreguntas = Object.keys(operacionesDiarias).filter(key => !serviciosFinancieros[key] && !userInput[key]);
+    const inputsPreguntas = Object.keys(operacionesDiarias).filter(key => !resultadoLP.posiciones[key] && !userInput[key]);
+
+    const excelDateToJSDate = (serial) => {
+        const startDate = new Date(1900, 0, 1);
+        const days = serial - 2; // Restamos 2 días debido al bug de Excel y al hecho de que la fecha de inicio es 1 (no 0)
+        const milliseconds = days * 24 * 60 * 60 * 1000;
+        return new Date(startDate.getTime() + milliseconds);
+    };
+    
+    // Formatear la fecha en "dd-mm-yyyy"
+    const formatDate = (date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
 
     if (inputsPreguntas.length > 0) {
         return JSON.stringify({ prompts: inputsPreguntas });
     }
 
-    const { resultado, corta, simultanea, garantia } = actualizarPosiciones(serviciosFinancieros, operacionesDiarias, userInput);
+    const jsDate = excelDateToJSDate(resultadoLP.fecha);
+    const formattedDate = formatDate(jsDate);
+
+    console.log("FORMATTED DATE:", formattedDate);
+
+    const { resultado, corta, simultanea, garantia } = actualizarPosiciones(resultadoLP.posiciones, operacionesDiarias, userInput);
     return JSON.stringify({
         resultado,
+        serviciosFinancieros,
         corta, 
         simultanea, 
-        garantia
+        garantia, 
+        formattedDate
+
     });
 }
 
